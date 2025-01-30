@@ -31,8 +31,8 @@
 #include <stdlib.h>
 #include "nvector_serialcomplex.h"
 #include "sundials_iterativecomplex.h"
-// #include "sundials_iterativecomplex.h" //Amihere
-// #include "sundials_iterativecomplex_impl.h" //Amihere
+// #include "sundials_iterativecomplex.h" 
+// #include "sundials_iterativecomplex_impl.h" 
 
 
 #if defined(SUNDIALS_EXTENDED_PRECISION)
@@ -91,17 +91,17 @@ int main(int argc, char* argv[])
   //   }
   // }
 
-  H = (suncomplextype**)malloc((3) * sizeof(suncomplextype*)); //Amihere
+  H = (suncomplextype**)malloc((3) * sizeof(suncomplextype*)); 
   for (k = 0; k < 3; k++)
   {
     H[k] = NULL;
-    H[k] = (suncomplextype*)malloc(3 * sizeof(suncomplextype)); //Amihere
+    H[k] = (suncomplextype*)malloc(3 * sizeof(suncomplextype)); 
   }
 
   givens = (suncomplextype*)malloc(2 * 3 * sizeof(suncomplextype));
 
-  vtemp = (N_Vector*)malloc((3) * sizeof(N_Vector)); //Amihere
-  stemp = (suncomplextype*)malloc((3) * sizeof(suncomplextype)); //Amihere
+  vtemp = (N_Vector*)malloc((3) * sizeof(N_Vector)); 
+  stemp = (suncomplextype*)malloc((3) * sizeof(suncomplextype)); 
 
   /* set up matrix */
   vdata = N_VGetArrayPointer_SComplex(V[0]);
