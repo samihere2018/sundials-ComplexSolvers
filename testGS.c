@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------
- * Programmer(s): Daniel Reynolds and Sylvia Amihere @ SMU
+ * Programmer(s): Daniel Reynolds  
+ * Edited by Sylvia Amihere @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
  * Copyright (c) 2002-2024, Lawrence Livermore National Security
@@ -10,11 +11,19 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * SUNDIALS Copyright End
- * -----------------------------------------------------------------
+ * ------------------------------------------------------------------------
  * These test functions check some components of a complex-valued
  * SUNLINEARSOLVER module implementation (for more thorough tests,
  * see the main SUNDIALS repository, inside examples/sunlinsol/).
- * -----------------------------------------------------------------
+
+ * The solvers tested are the Classical Gram-Schmidt, 
+ * Modified Gram-Schmidt and QR factorization (using Givens Rotation).
+
+ * Vectors used are [3+4i,0,0], [-4+3i,8+6i,0] and [4-3i,12+9i,1].
+ * The Gram-Schmidt Othogonalization process should produce the orthogonal 
+ * vectors [3+4i,0,0], [0,8+6i,0] and [0,0,1].
+ * The orthonormal vectors are [0.6+0.8i,0,0], [0,0.8+0.6i,0] and [0,0,1].
+ * ------------------------------------------------------------------------
  */
 
 #include <math.h>
@@ -113,9 +122,9 @@ int main(int argc, char* argv[])
   {
     krydim = k  ;
     SUNClassicalGSComplex(V, H, k, 3, &vnorm, stemp, vtemp);
-    // SUNModifiedGSComplex(V, H, k, 3, &vnorm);
+    // SUNModifiedGSComplex(V, H, k, 3, &vnorm); //Uncomment if Modified GS is used.
     N_VScale_SComplex(1.0/vnorm, V[k], V[k]);
-    SUNQRfactComplex(krydim, H, givens, k);
+    // SUNQRfactComplex(krydim, H, givens, k); //Uncomment to check Hessenberg matrix using QR factorization (uses Givens Rotation)
     // printf("stemp at %d is: %f + i%f\n", k, creal(stemp[k]), cimag(stemp[k]));
     // N_VScale_SComplex(1.0/vnorm, V[k], VNew[k]);
   }
@@ -138,13 +147,13 @@ int main(int argc, char* argv[])
   }
 
 
-  /* print everything in H */
-  for (k=0; k<3; k++)
-  {
-    for (l=0; l<3; l++) {
-      printf("H at row %d, column %d is: %f + i%f\n", k, l, creal(H[k][l]), cimag(H[k][l]));
-    }
-  }
+  // /* print everything in H */
+  // for (k=0; k<3; k++)
+  // {
+  //   for (l=0; l<3; l++) {
+  //     printf("H at row %d, column %d is: %f + i%f\n", k, l, creal(H[k][l]), cimag(H[k][l]));
+  //   }
+  // }
 
   /* return with success */
   return 0;
