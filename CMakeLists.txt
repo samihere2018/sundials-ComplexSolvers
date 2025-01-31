@@ -36,7 +36,7 @@ target_link_libraries(testGS PUBLIC
 add_executable(testComplexSUNLinearSolver
   testComplexSUNLinearSolver.c
   sundials_iterativecomplex.c
-  sunlinsol_spgmrcomplex.c
+  sunlinsol_spfgmrcomplex.c
   nvector_serialcomplex.c)
 target_link_libraries(testComplexSUNLinearSolver PUBLIC
   SUNDIALS::core
@@ -71,7 +71,7 @@ target_link_libraries(complex_erk_NVector_serial_complex PUBLIC
   complex_IMEX.c
   nvector_serialcomplex.c
   sundials_iterativecomplex.c
-  sunlinsol_spgmrcomplex.c)
+  sunlinsol_spfgmrcomplex.c)
 target_link_libraries(complex_IMEX PUBLIC
   SUNDIALS::arkode
   m)

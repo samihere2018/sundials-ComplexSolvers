@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------
  * Programmer(s): Mustafa Aggul @ SMU
+ * Edited by Sylvia Amihere @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
  * Copyright (c) 2002-2024, Lawrence Livermore National Security
@@ -1173,7 +1174,7 @@ SUNErrCode N_VDotProdMulti_Real(int nvec, N_Vector x, N_Vector* Y,
   {
     yd          = NV_COMPLEX_DATA_CS(Y[i]);
     dotprods[i] = ZERO;
-    for (j = 0; j < N; j++) { dotprods[i] += yd[j] * xd[j]; }
+    for (j = 0; j < N; j++) { dotprods[i] +=  yd[j] * xd[j]; }
   }
 
   return SUN_SUCCESS;

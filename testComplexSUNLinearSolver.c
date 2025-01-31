@@ -1,5 +1,6 @@
 /* -----------------------------------------------------------------
  * Programmer(s): Mustafa Aggul @ SMU
+ * Edited by Sylvia Amihere @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
  * Copyright (c) 2002-2024, Lawrence Livermore National Security
@@ -21,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nvector_serialcomplex.h"
-#include "sunlinsol_spgmrcomplex.h"
+#include "sunlinsol_spfgmrcomplex.h"
 // #include "sundials_iterativecomplex.h" //Amihere
 // #include "sundials_iterativecomplex_impl.h" //Amihere
 
@@ -196,11 +197,11 @@ int main(int argc, char* argv[])
   N_VConst_SComplex(SOMECOMPLEXNUMBERd, ProbData.d);
 
   /* Create Custom linear solver */
-  LS = SUNLinSol_SPGMRComplex(x, pretype, maxl, sunctx);
+  LS = SUNLinSol_SPFGMRComplex(x, pretype, maxl, sunctx);
   // LS = SUNLinSol_SComplex(x, pretype, gstype, maxl, sunctx); //Amihere
 
   /* Test GetType */
-  if (SUNLinSolGetType_SPGMRComplex(LS) != SUNLINEARSOLVER_ITERATIVE)
+  if (SUNLinSolGetType_SPFGMRComplex(LS) != SUNLINEARSOLVER_ITERATIVE)
   {
     printf(">>> FAILED test -- SUNLinSolGetType \n");
     fails++;
@@ -208,7 +209,7 @@ int main(int argc, char* argv[])
   else { printf("    PASSED test -- SUNLinSolGetType \n");}
 
   /* Test GetID */
-  // if (SUNLinSolGetID_SPGMRComplex(LS) != SUNLINEARSOLVER_CUSTOM)
+  // if (SUNLinSolGetID_SPFGMRComplex(LS) != SUNLINEARSOLVER_CUSTOM)
   // {
   //   printf(">>> FAILED test -- SUNLinSolGetID \n");
   //   fails++;
@@ -216,7 +217,7 @@ int main(int argc, char* argv[])
   // else { printf("    PASSED test -- SUNLinSolGetID \n"); }
 
   /* Test SetATimes */
-  failure = SUNLinSolSetATimes_SPGMRComplex(LS, &ProbData, ATimes);
+  failure = SUNLinSolSetATimes_SPFGMRComplex(LS, &ProbData, ATimes);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetATimes returned %d \n", failure);
@@ -225,7 +226,7 @@ int main(int argc, char* argv[])
   else { printf("    PASSED test -- SUNLinSolSetATimes \n"); }
 
   /* Test SetPreconditioner */
-  failure = SUNLinSolSetPreconditioner_SPGMRComplex(LS, &ProbData, PSetup, PSolve);
+  failure = SUNLinSolSetPreconditioner_SPFGMRComplex(LS, &ProbData, PSetup, PSolve);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetPreconditioner returned %d \n", failure);
@@ -234,7 +235,7 @@ int main(int argc, char* argv[])
   else { printf("    PASSED test -- SUNLinSolSetPreconditioner \n"); }
 
   /* Test SetScalingVectors */
-  failure = SUNLinSolSetScalingVectors_SPGMRComplex(LS, ProbData.s1, ProbData.s2);
+  failure = SUNLinSolSetScalingVectors_SPFGMRComplex(LS, ProbData.s1, ProbData.s2);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetScalingVectors returned %d \n", failure);
@@ -243,7 +244,7 @@ int main(int argc, char* argv[])
   else { printf("    PASSED test -- SUNLinSolSetScalingVectors \n"); }
 
   /* Test SetZeroGuess */
-  failure = SUNLinSolSetZeroGuess_SPGMRComplex(LS, SUNTRUE);
+  failure = SUNLinSolSetZeroGuess_SPFGMRComplex(LS, SUNTRUE);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetZeroGuess_SComplex returned %d \n", failure);
@@ -251,7 +252,7 @@ int main(int argc, char* argv[])
   }
   else { printf("    PASSED test -- SUNLinSolSetZeroGuess_SComplex \n"); }
 
-  failure = SUNLinSolSetZeroGuess_SPGMRComplex(LS, SUNFALSE);
+  failure = SUNLinSolSetZeroGuess_SPFGMRComplex(LS, SUNFALSE);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetZeroGuess_SComplex returned %d \n", failure);
@@ -260,7 +261,7 @@ int main(int argc, char* argv[])
   else { printf("    PASSED test -- SUNLinSolSetZeroGuess_SComplex \n"); }
 
   /* Test Initialize */
-  if (SUNLinSolInitialize_SPGMRComplex(LS))
+  if (SUNLinSolInitialize_SPFGMRComplex(LS))
   { 
     printf(">>> FAILED test -- SUNLinSolInitialize_SComplex check \n");
     fails++;
@@ -285,16 +286,16 @@ int main(int argc, char* argv[])
   if (check_flag(&fails, "ATimes", 1)) { return 1; }
 
   /* Run tests with this setup */
-  failure = SUNLinSol_SPGMRComplex_SetPrecType(LS, pretype);
+  failure = SUNLinSol_SPFGMRComplex_SetPrecType(LS, pretype);
   if (failure) { printf(">>> FAILED test -- SUNLinSolSetPrecType_SComplex check \n"); }
   else { printf("    PASSED test -- SUNLinSol_SetPrecType \n"); }
 
   //Amihere
-  failure = SUNLinSol_SPGMRComplex_SetGSType(LS, gstype);
+  failure = SUNLinSol_SPFGMRComplex_SetGSType(LS, gstype);
   if (failure) { printf(">>> FAILED test -- SUNLinSolSetGSType_SComplex check \n"); }
   else { printf("    PASSED test -- SUNLinSol_SetGSType \n"); }
 
-  failure = SUNLinSolSetup_SPGMRComplex(LS, A);
+  failure = SUNLinSolSetup_SPFGMRComplex(LS, A);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetup_SComplex check \n");
@@ -304,7 +305,7 @@ int main(int argc, char* argv[])
 
   N_Vector y = N_VClone_SComplex(x);
   N_VConst_SComplex(ZERO, y);
-  failure = SUNLinSolSetZeroGuess_SPGMRComplex(LS, SUNTRUE);
+  failure = SUNLinSolSetZeroGuess_SPFGMRComplex(LS, SUNTRUE);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSetZeroGuess_SComplex returned %d \n", failure);
@@ -312,7 +313,7 @@ int main(int argc, char* argv[])
     return (1);
   }
 
-  failure = SUNLinSolSolve_SPGMRComplex(LS, A, y, b, tol);
+  failure = SUNLinSolSolve_SPFGMRComplex(LS, A, y, b, tol);
   if (failure)
   {
     printf(">>> FAILED test -- SUNLinSolSolve_SComplex returned %d \n", failure);
@@ -331,14 +332,14 @@ int main(int argc, char* argv[])
   { printf("    PASSED test -- SUNLinSolSolve_SComplex \n"); }
   N_VDestroy_SComplex(y);
 
-  sunindextype lastflag = SUNLinSolLastFlag_SPGMRComplex(LS);
+  sunindextype lastflag = SUNLinSolLastFlag_SPFGMRComplex(LS);
   printf("    PASSED test -- SUNLinSolLastFlag_SComplex (%ld) \n", (long int)lastflag);
 
 
-  int numiters = SUNLinSolNumIters_SPGMRComplex(LS);
+  int numiters = SUNLinSolNumIters_SPFGMRComplex(LS);
   printf("    PASSED test -- SUNLinSolNumIters_SComplex (%d) \n", numiters);
 
-  double resnorm = (double) SUNLinSolResNorm_SPGMRComplex(LS);
+  double resnorm = (double) SUNLinSolResNorm_SPFGMRComplex(LS);
   if (resnorm < ZERO)
   {
     printf(">>> FAILED test -- SUNLinSolResNorm_SComplex returned %g \n", resnorm);
@@ -346,7 +347,7 @@ int main(int argc, char* argv[])
   }
   else { printf("    PASSED test -- SUNLinSolResNorm_SComplex\n"); }
 
-  N_Vector resid = SUNLinSolResid_SPGMRComplex(LS);
+  N_Vector resid = SUNLinSolResid_SPFGMRComplex(LS);
   if (resid == NULL)
   {
     printf(">>> FAILED test -- SUNLinSolResid_SComplex returned NULL N_Vector \n");
@@ -363,7 +364,7 @@ int main(int argc, char* argv[])
   else { printf("SUCCESS: MySUNLinSol module, passed all tests\n\n"); }
 
   /* Free solver and vectors */
-  SUNLinSolFree_SPGMRComplex(LS);
+  SUNLinSolFree_SPFGMRComplex(LS);
   N_VDestroy_SComplex(x);
   N_VDestroy_SComplex(xhat);
   N_VDestroy_SComplex(b);
