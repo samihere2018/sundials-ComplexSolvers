@@ -42,7 +42,7 @@
 #include <sundials/sundials_types.h>   /* def. of type 'sunrealtype' */
 #include "nvector_serialcomplex.h"
 #include "sunlinsol_sptfqmrcomplex.h"
-#include "sunlinsol_spgmrcomplex.h"
+#include "sunlinsol_spbcgscomplex.h"
 
 #if defined(SUNDIALS_EXTENDED_PRECISION)
 #define GSYM "Lg"
@@ -161,9 +161,8 @@ int main(void)
 
   // LS = SUNLinSol_SComplex(y, pretype, maxl, ctx);
   // if (check_flag((void*)LS, "SUNLinSol_SComplex", 0)) { return 1; }
-
-  LS = SUNLinSol_SPGMRComplex(y, pretype, maxl, ctx);
-  if (check_flag((void*)LS, "SUNLinSol_SPGMRComplex", 0)) { return 1; }
+  LS = SUNLinSol_SPBCGSComplex(y, pretype, maxl, ctx);
+  if (check_flag((void*)LS, "SUNLinSol_SPBCGSComplex", 0)) { return 1; }
 
   /* Linear solver interface */
   flag = ARKStepSetLinearSolver(arkode_mem, LS, NULL);

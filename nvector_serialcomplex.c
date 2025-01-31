@@ -762,7 +762,7 @@ suncomplextype N_VDotProd_SComplex(N_Vector x, N_Vector y)
 
 sunrealtype N_VDotProd_Real(N_Vector x, N_Vector y)
 {
-  printf("\nCalling N_VDotProd_Real, that must cause an error!\n\n");
+  //printf("\nCalling N_VDotProd_Real, that must cause an error!\n\n");
 
   sunindextype i, N;
   sunrealtype sum;
@@ -1160,7 +1160,7 @@ SUNErrCode N_VDotProdMulti_Real(int nvec, N_Vector x, N_Vector* Y,
   /* should have called N_VDotProd */
   if (nvec == 1)
   {
-    dotprods[0] = N_VDotProd_SComplex(Y[0], x);
+    dotprods[0] = N_VDotProd_SComplex(Y[0] , x);
     return SUN_SUCCESS;
   }
 

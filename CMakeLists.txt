@@ -25,18 +25,9 @@ target_link_libraries(testComplexNVector PUBLIC
   SUNDIALS::core
   m)
 
-add_executable(testGS
-  testGS.c
-  sundials_iterativecomplex.c
-  nvector_serialcomplex.c)
-target_link_libraries(testGS PUBLIC
-  SUNDIALS::core
-  m)
-  
 add_executable(testComplexSUNLinearSolver
   testComplexSUNLinearSolver.c
-  sundials_iterativecomplex.c
-  sunlinsol_spgmrcomplex.c
+  sunlinsol_spbcgscomplex.c
   nvector_serialcomplex.c)
 target_link_libraries(testComplexSUNLinearSolver PUBLIC
   SUNDIALS::core
@@ -70,8 +61,7 @@ target_link_libraries(complex_erk_NVector_serial_complex PUBLIC
   add_executable(complex_IMEX
   complex_IMEX.c
   nvector_serialcomplex.c
-  sundials_iterativecomplex.c
-  sunlinsol_spgmrcomplex.c)
+  sunlinsol_spbcgscomplex.c)
 target_link_libraries(complex_IMEX PUBLIC
   SUNDIALS::arkode
   m)
