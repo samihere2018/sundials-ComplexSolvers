@@ -32,6 +32,38 @@ add_executable(testGS
 target_link_libraries(testGS PUBLIC
   SUNDIALS::core
   m)
+
+add_executable(testGramSchmidt
+  testGramSchmidt.c
+  sundials_iterativecomplex.c
+  nvector_serialcomplex.c)
+target_link_libraries(testGramSchmidt PUBLIC
+  SUNDIALS::core
+  m)
+
+add_executable(testGramSchmidtReal
+  testGramSchmidtReal.c
+  sundials_iterativecomplex.c
+  nvector_serialcomplex.c)
+target_link_libraries(testGramSchmidtReal PUBLIC
+  SUNDIALS::core
+  m)
+
+add_executable(testQRAdd
+  testQRAdd_variants.c
+  sundials_iterativecomplex.c
+  nvector_serialcomplex.c)
+target_link_libraries(testQRAdd PUBLIC
+  SUNDIALS::core
+  m)
+
+add_executable(testQRAddReal
+  testQRAdd_variantsReal.c
+  sundials_iterativecomplex.c
+  nvector_serialcomplex.c)
+target_link_libraries(testQRAddReal PUBLIC
+  SUNDIALS::core
+  m)
   
 add_executable(testComplexSUNLinearSolver
   testComplexSUNLinearSolver.c

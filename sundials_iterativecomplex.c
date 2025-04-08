@@ -63,9 +63,12 @@ SUNErrCode SUNModifiedGSComplex(N_Vector* v, suncomplextype** h, int k, int p,
   {
     // h[i][k_minus_1] = N_VDotProd(v[i], v[k]);
     // h[i][k_minus_1] = N_VDotProd_SComplex(v[k], v[i]); //Amihere: original
-    h[i][k_minus_1] = N_VDotProd_SComplex(v[i], v[k]); //Amihere
+    h[i][k_minus_1] = N_VDotProd_SComplex(v[i], v[k]); //Amihere: we use this instead of original because we need to take the complex conjuagte of the bases we are projecting onto
+    // printf("h[%i][%i]=<v[%i],v[%i]> = %e + %e I\n", i, k_minus_1, k, i, creal(h[i][k_minus_1]), cimag(h[i][k_minus_1]));//Amihere:debugging
     // SUNCheckLastErr();
     N_VLinearSum_SComplex(ONE, v[k], -h[i][k_minus_1], v[i], v[k]);
+    // printf("V[%i] = \n",k); //Amihere: debugging
+    // N_VPrint(v[k]); //Amihere: debugging
     // SUNCheckLastErr();
   }
 
@@ -90,7 +93,8 @@ SUNErrCode SUNModifiedGSComplex(N_Vector* v, suncomplextype** h, int k, int p,
   {
     // new_product = N_VDotProd(v[i], v[k]);
     // new_product = N_VDotProd_SComplex(v[k], v[i]); //Amihere: original
-    new_product = N_VDotProd_SComplex(v[i], v[k]); //Amihere
+    new_product = N_VDotProd_SComplex(v[i], v[k]); //Amihere: we use this instead of original because we need to take the complex conjuagte of the bases we are projecting onto
+    // printf("newProd = <v[%i],v[%i]> = %e + %e I\n", k, i, creal(new_product), cimag(new_product));//Amihere:debugging
     // SUNCheckLastErr();
     temp = FACTOR * h[i][k_minus_1];
     // if ((temp + new_product) == temp) { continue; }
@@ -137,7 +141,10 @@ SUNErrCode SUNClassicalGSComplex(N_Vector* v, suncomplextype** h, int k, int p,
   /* Perform Classical Gram-Schmidt */
 
   N_VDotProdMulti_SComplex(k - i0 + 1, v[k], v + i0, stemp);
-
+  // for (int ij=0; ij<k - i0 + 1; ij++) //Amihere:debugging
+  // {
+  //   printf("stemp[%i] =  %e + %e I \n",ij, creal(stemp[ij]), cimag(stemp[ij]));
+  // }
   vk_norm = SUNRsqrt((sunrealtype)(stemp[k - i0] * conj(stemp[k - i0])));
   for (i = k - i0 - 1; i >= 0; i--)
   {
@@ -150,10 +157,12 @@ SUNErrCode SUNClassicalGSComplex(N_Vector* v, suncomplextype** h, int k, int p,
 
   // SUNCheckCall(N_VLinearCombination_SComplex(k - i0 + 1, stemp, vtemp, v[k]));
   N_VLinearCombination_SComplex(k - i0 + 1, stemp, vtemp, v[k]);
+  
 
   /* Compute the norm of the new vector at v[k] */
 
   *new_vk_norm = SUNRsqrt((sunrealtype) N_VDotProd_SComplex(v[k], v[k]));
+  // N_VScale_SComplex(1.0/(*new_vk_norm), v[k], v[k]);//Amihere: use when running unit test for Gram Schmidt
   // SUNCheckLastErr();
 
   /* Reorthogonalize if necessary */
@@ -161,6 +170,9 @@ SUNErrCode SUNClassicalGSComplex(N_Vector* v, suncomplextype** h, int k, int p,
   if ((FACTOR * ((sunrealtype)*new_vk_norm)) < vk_norm)
   {
     // SUNCheckCall(N_VDotProdMulti_SComplex(k - i0, v[k], v + i0, stemp + 1));
+    //Sylvia: this line is supposed to be "N_VDotProdMulti_SComplex(k - i0, v + i0, v[k], stemp + 1);" because v+io is Av and v[k] is v.
+    //Sylvia: the algorithm is dotprod of Av and v not dotprod of v and Av.
+    //Sylvia: because of the structure of dotprodmulti, we have to do dotprod of v and Av. Since we are dealing with complex values, we just have to take the complex conjugate of the second entry Av and multiply by the second entry.
     N_VDotProdMulti_SComplex(k - i0, v[k], v + i0, stemp + 1);
 
     stemp[0] = ONE;
@@ -251,11 +263,18 @@ int SUNQRfactComplex(int n, suncomplextype** h, suncomplextype* q, int job)
       else if (SUNRsqrt((sunrealtype)(conj(temp2) * temp2)) >= SUNRsqrt((sunrealtype)(conj(temp1) * temp1)))
       {
         // temp3 = temp1 / temp2;
-        temp3 = (conj(temp1)*temp1) / (conj(temp2)*temp2); //Amihere (use this and next four lines)
+        // temp3 = (conj(temp1)*temp1) / (conj(temp2)*temp2); //Amihere (use this and next four lines)
+        // absTemp2 = SUNRsqrt((sunrealtype)(conj(temp2)*temp2));
+        // absTemp1 = SUNRsqrt((sunrealtype)(conj(temp1)*temp1));
+        // c = ONE / ((absTemp2/absTemp1) * SUNRsqrt(ONE + (sunrealtype)temp3)) ;
+        // s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+
+        //New - 30th March 2025
+        temp3 = (conj(temp1)*temp1) / (conj(temp2)*temp2); //Amihere (use this and next three lines)
         absTemp2 = SUNRsqrt((sunrealtype)(conj(temp2)*temp2));
-        absTemp1 = SUNRsqrt((sunrealtype)(conj(temp1)*temp1));
-        c = ONE / ((absTemp2/absTemp1) * SUNRsqrt(ONE + (sunrealtype)temp3)) ;
-        s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+        s =  -ONE / ((temp2/absTemp2) * SUNRsqrt(ONE + (sunrealtype)temp3)) ;
+        c = -s * (conj(temp1)/conj(temp2));
+
 
         // s     = -ONE / SUNRsqrt(ONE + SUNSQR((sunrealtype)temp3));
         // // s     = -ONE / SUNRsqrt(ONE + ((sunrealtype)(conj(temp3) * temp3)));
@@ -270,12 +289,18 @@ int SUNQRfactComplex(int n, suncomplextype** h, suncomplextype* q, int job)
         // s  = -signf * conj(temp2)/denomCS; 
         // s = c * temp3;
       }
-      else
+      else 
       {
         // temp3 = temp2 / temp1;
-        temp3 = (conj(temp2)*temp2) / (conj(temp1)*temp1); //Amihere (use this and next two lines)
-        c  = ONE / SUNRsqrt(ONE + (sunrealtype)temp3);
-        s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+        // temp3 = (conj(temp2)*temp2) / (conj(temp1)*temp1); //Amihere (use this and next two lines)
+        // c  = ONE / SUNRsqrt(ONE + (sunrealtype)temp3);
+        // s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+
+        //New - 30th March 2025
+        temp3 = (conj(temp2)*temp2) / (conj(temp1)*temp1); //Amihere (use this and next three lines)
+        absTemp1 = SUNRsqrt((sunrealtype)(conj(temp1)*temp1));
+        c  = ONE / ((temp1/absTemp1)* SUNRsqrt(ONE + (sunrealtype)temp3));
+        s = -c * (conj(temp2)/conj(temp1));
 
         // c     = ONE / SUNRsqrt(ONE + SUNSQR((sunrealtype)temp3));
         // // c     = ONE / SUNRsqrt(ONE + ((sunrealtype)(conj(temp3) * temp3)));
@@ -359,12 +384,18 @@ int SUNQRfactComplex(int n, suncomplextype** h, suncomplextype* q, int job)
     // else if (SUNRabs(temp2) >= SUNRabs(temp1))
     else if (SUNRsqrt((sunrealtype)(conj(temp2) * temp2)) >= SUNRsqrt((sunrealtype)(conj(temp1) * temp1)))
     {
-      // temp3 = temp1 / temp2;
-      temp3 = (conj(temp1)*temp1) / (conj(temp2)*temp2); //Amihere (use this and next four lines)
-      absTemp2 = SUNRsqrt((sunrealtype)(conj(temp2)*temp2));
-      absTemp1 = SUNRsqrt((sunrealtype)(conj(temp1)*temp1));
-      c = ONE / ((absTemp2/absTemp1) * SUNRsqrt(ONE + (sunrealtype)temp3)) ;
-      s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+      // // temp3 = temp1 / temp2;
+      // temp3 = (conj(temp1)*temp1) / (conj(temp2)*temp2); //Amihere (use this and next four lines)
+      // absTemp2 = SUNRsqrt((sunrealtype)(conj(temp2)*temp2));
+      // absTemp1 = SUNRsqrt((sunrealtype)(conj(temp1)*temp1));
+      // c = ONE / ((absTemp2/absTemp1) * SUNRsqrt(ONE + (sunrealtype)temp3)) ;
+      // s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+
+       //New - 30th March 2025
+       temp3 = (conj(temp1)*temp1) / (conj(temp2)*temp2); //Amihere (use this and next three lines)
+       absTemp2 = SUNRsqrt((sunrealtype)(conj(temp2)*temp2));
+       s =  -ONE / ((temp2/absTemp2) * SUNRsqrt(ONE + (sunrealtype)temp3)) ;
+       c = -s * (conj(temp1)/conj(temp2));
 
       // s     = -ONE / SUNRsqrt(ONE + SUNSQR((sunrealtype)temp3));
       // // s     = -ONE / SUNRsqrt(ONE + ((sunrealtype)(conj(temp3) * temp3)));
@@ -379,12 +410,18 @@ int SUNQRfactComplex(int n, suncomplextype** h, suncomplextype* q, int job)
       // s  = -signf * conj(temp2)/denomCS; 
       // s = c * temp3;
     }
-    else
+    else 
     {
-      // temp3 = temp2 / temp1;
-      temp3 = (conj(temp2)*temp2) / (conj(temp1)*temp1); //Amihere (use this and next two lines)
-      c  = ONE / SUNRsqrt(ONE + (sunrealtype)temp3);
-      s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+      // // temp3 = temp2 / temp1;
+      // temp3 = (conj(temp2)*temp2) / (conj(temp1)*temp1); //Amihere (use this and next two lines)
+      // c  = ONE / SUNRsqrt(ONE + (sunrealtype)temp3);
+      // s = -c * (temp1 * conj(temp2)) / ((sunrealtype)(conj(temp1)*temp1));
+
+      //New - 30th March 2025
+      temp3 = (conj(temp2)*temp2) / (conj(temp1)*temp1); //Amihere (use this and next three lines)
+      absTemp1 = SUNRsqrt((sunrealtype)(conj(temp1)*temp1));
+      c  = ONE / ((temp1/absTemp1)* SUNRsqrt(ONE + (sunrealtype)temp3));
+      s = -c * (conj(temp2)/conj(temp1));
 
       // c     = ONE / SUNRsqrt(ONE + SUNSQR((sunrealtype)temp3));
       // // c     = ONE / SUNRsqrt(ONE + ((sunrealtype)(conj(temp3) * temp3)));
@@ -475,98 +512,101 @@ int SUNQRsolComplex(int n, suncomplextype** h, suncomplextype* q, suncomplextype
   return (code);
 }
 
-// /*
-//  * -----------------------------------------------------------------
-//  * Function : SUNQRAdd_MGS
-//  * -----------------------------------------------------------------
-//  * Implementation of QRAdd to be called in Anderson Acceleration
-//  * -----------------------------------------------------------------
-//  */
+/*
+ * -----------------------------------------------------------------
+ * Function : SUNQRAdd_MGS
+ * -----------------------------------------------------------------
+ * Implementation of QRAdd to be called in Anderson Acceleration
+ * -----------------------------------------------------------------
+ */
 
-// SUNErrCode SUNQRAdd_MGS(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
-//                         int mMax, void* QRdata)
-// {
-//   SUNFunctionBegin(Q[0]->sunctx);
+SUNErrCode SUNQRAdd_MGSComplex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
+                        int mMax, void* QRdata)
+{
+  // SUNFunctionBegin(Q[0]->sunctx);
 
-//   sunindextype j;
-//   SUNQRData qrdata = (SUNQRData)QRdata;
+  sunindextype j;
+  SUNQRData qrdata = (SUNQRData)QRdata;
 
-//   N_VScale(ONE, df, qrdata->vtemp);
-//   SUNCheckLastErr();
-//   for (j = 0; j < m; j++)
-//   {
-//     R[m * mMax + j] = N_VDotProd(Q[j], qrdata->vtemp);
-//     SUNCheckLastErr();
-//     N_VLinearSum(ONE, qrdata->vtemp, -R[m * mMax + j], Q[j], qrdata->vtemp);
-//     SUNCheckLastErr();
-//   }
-//   R[m * mMax + m] = N_VDotProd(qrdata->vtemp, qrdata->vtemp);
-//   SUNCheckLastErr();
-//   R[m * mMax + m] = SUNRsqrt(R[m * mMax + m]);
-//   N_VScale((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
-//   SUNCheckLastErr();
+  N_VScale_SComplex(ONE, df, qrdata->vtemp);
+  // SUNCheckLastErr();
+  for (j = 0; j < m; j++)
+  {
+    R[m * mMax + j] = N_VDotProd_SComplex(Q[j], qrdata->vtemp);
+    // SUNCheckLastErr();
+    N_VLinearSum_SComplex(ONE, qrdata->vtemp, -R[m * mMax + j], Q[j], qrdata->vtemp);
+    // SUNCheckLastErr();
+  }
+  R[m * mMax + m] = (sunrealtype)N_VDotProd_SComplex(qrdata->vtemp, qrdata->vtemp);
+  // SUNCheckLastErr();
+  R[m * mMax + m] = SUNRsqrt((sunrealtype)R[m * mMax + m]);
+  N_VScale_SComplex((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
+  // SUNCheckLastErr();
 
-//   return SUN_SUCCESS;
-// }
+  return SUN_SUCCESS;
+}
 
-// /*
-//  * -----------------------------------------------------------------
-//  * Function : SUNQRAdd_ICWY
-//  * -----------------------------------------------------------------
-//  * Low synchronous implementation of QRAdd to be called in
-//  * Anderson Acceleration.
-//  * -----------------------------------------------------------------
-//  */
+/*
+ * -----------------------------------------------------------------
+ * Function : SUNQRAdd_ICWY
+ * -----------------------------------------------------------------
+ * Low synchronous implementation of QRAdd to be called in
+ * Anderson Acceleration.
+ * -----------------------------------------------------------------
+ */
 
-// SUNErrCode SUNQRAdd_ICWY(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
-//                          int mMax, void* QRdata)
-// {
-//   SUNFunctionBegin(Q[0]->sunctx);
-//   sunindextype j, k;
-//   SUNQRData qrdata = (SUNQRData)QRdata;
+SUNErrCode SUNQRAdd_ICWYComplex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
+                         int mMax, void* QRdata)
+{
+  // SUNFunctionBegin(Q[0]->sunctx);
+  sunindextype j, k;
+  SUNQRData qrdata = (SUNQRData)QRdata;
 
-//   N_VScale(ONE, df, qrdata->vtemp);
-//   SUNCheckLastErr(); /* stores d_fi in temp */
+  N_VScale_SComplex(ONE, df, qrdata->vtemp);
+  // SUNCheckLastErr(); /* stores d_fi in temp */
 
-//   if (m > 0)
-//   {
-//     /* T(1:k-1,k-1)^T = Q(:,1:k-1)^T * Q(:,k-1) */
-//     SUNCheckCall(
-//       N_VDotProdMulti(m, Q[m - 1], Q, qrdata->temp_array + (m - 1) * mMax));
+  if (m > 0)
+  {
+    /* T(1:k-1,k-1)^T = Q(:,1:k-1)^T * Q(:,k-1) */
+    // SUNCheckCall(
+    //   N_VDotProdMulti(m, Q[m - 1], Q, qrdata->temp_array + (m - 1) * mMax));
+    N_VDotProdMulti_SComplex(m, Q[m - 1], Q, qrdata->temp_array + (m - 1) * mMax);
 
-//     /* T(k-1,k-1) = 1.0 */
-//     qrdata->temp_array[(m - 1) * mMax + (m - 1)] = ONE;
+    /* T(k-1,k-1) = 1.0 */
+    qrdata->temp_array[(m - 1) * mMax + (m - 1)] = ONE;
 
-//     /* R(1:k-1,k) = Q_k-1^T * df */
-//     SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp, Q, R + m * mMax));
+    /* R(1:k-1,k) = Q_k-1^T * df */
+    // SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp, Q, R + m * mMax));
+    N_VDotProdMulti_SComplex(m, qrdata->vtemp, Q, R + m * mMax);
 
-//     /* Solve T^T * R(1:k-1,k) = R(1:k-1,k) */
-//     for (k = 0; k < m; k++)
-//     {
-//       /* Skip setting the diagonal element because it doesn't change */
-//       for (j = k + 1; j < m; j++)
-//       {
-//         R[m * mMax + j] -= R[m * mMax + k] * qrdata->temp_array[j * mMax + k];
-//       }
-//     }
-//     /* end */
+    /* Solve T^T * R(1:k-1,k) = R(1:k-1,k) */
+    for (k = 0; k < m; k++)
+    {
+      /* Skip setting the diagonal element because it doesn't change */
+      for (j = k + 1; j < m; j++)
+      {
+        R[m * mMax + j] -= R[m * mMax + k] * qrdata->temp_array[j * mMax + k];
+      }
+    }
+    /* end */
 
-//     /* Q(:,k-1) = df - Q_k-1 R(1:k-1,k) */
-//     SUNCheckCall(N_VLinearCombination(m, R + m * mMax, Q, qrdata->vtemp2));
-//     N_VLinearSum(ONE, qrdata->vtemp, -ONE, qrdata->vtemp2, qrdata->vtemp);
-//     SUNCheckLastErr();
-//   }
+    /* Q(:,k-1) = df - Q_k-1 R(1:k-1,k) */
+    // SUNCheckCall(N_VLinearCombination(m, R + m * mMax, Q, qrdata->vtemp2));
+    N_VLinearCombination_SComplex(m, R + m * mMax, Q, qrdata->vtemp2);
+    N_VLinearSum_SComplex(ONE, qrdata->vtemp, -ONE, qrdata->vtemp2, qrdata->vtemp);
+    // SUNCheckLastErr();
+  }
 
-//   /* R(k,k) = \| df \| */
-//   R[m * mMax + m] = N_VDotProd(qrdata->vtemp, qrdata->vtemp);
-//   SUNCheckLastErr();
-//   R[m * mMax + m] = SUNRsqrt(R[m * mMax + m]);
-//   /* Q(:,k) = df / \| df \| */
-//   N_VScale((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
-//   SUNCheckLastErr();
+  /* R(k,k) = \| df \| */
+  R[m * mMax + m] = (sunrealtype)N_VDotProd_SComplex(qrdata->vtemp, qrdata->vtemp);
+  // SUNCheckLastErr();
+  R[m * mMax + m] = SUNRsqrt((sunrealtype)R[m * mMax + m]);
+  /* Q(:,k) = df / \| df \| */
+  N_VScale_SComplex((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
+  // SUNCheckLastErr();
 
-//   return SUN_SUCCESS;
-// }
+  return SUN_SUCCESS;
+}
 
 // /*
 //  * -----------------------------------------------------------------
@@ -638,119 +678,127 @@ int SUNQRsolComplex(int n, suncomplextype** h, suncomplextype* q, suncomplextype
 //   return SUN_SUCCESS;
 // }
 
-// /*
-//  * -----------------------------------------------------------------
-//  * Function : SUNQRAdd_CGS2
-//  * -----------------------------------------------------------------
-//  * Low synchronous Implementation of QRAdd to be called in
-//  * Anderson Acceleration.
-//  * -----------------------------------------------------------------
-//  */
+/*
+ * -----------------------------------------------------------------
+ * Function : SUNQRAdd_CGS2
+ * -----------------------------------------------------------------
+ * Low synchronous Implementation of QRAdd to be called in
+ * Anderson Acceleration.
+ * -----------------------------------------------------------------
+ */
 
-// SUNErrCode SUNQRAdd_CGS2(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
-//                          int mMax, void* QRdata)
-// {
-//   SUNFunctionBegin(Q[0]->sunctx);
-//   sunindextype j;
-//   SUNQRData qrdata = (SUNQRData)QRdata;
+SUNErrCode SUNQRAdd_CGS2Complex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
+                         int mMax, void* QRdata)
+{
+  // SUNFunctionBegin(Q[0]->sunctx);
+  sunindextype j;
+  SUNQRData qrdata = (SUNQRData)QRdata;
 
-//   N_VScale(ONE, df, qrdata->vtemp);
-//   SUNCheckLastErr(); /* temp = df */
+  N_VScale_SComplex(ONE, df, qrdata->vtemp);
+  // SUNCheckLastErr(); /* temp = df */
 
-//   if (m > 0)
-//   {
-//     /* s_k = Q_k-1^T df_aa -- update with sdata as a sunrealtype* array */
-//     SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp, Q, R + m * mMax));
+  if (m > 0)
+  {
+    /* s_k = Q_k-1^T df_aa -- update with sdata as a sunrealtype* array */
+    // SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp, Q, R + m * mMax));
+    N_VDotProdMulti_SComplex(m, qrdata->vtemp, Q, R + m * mMax);
 
-//     /* y = df - Q_k-1 s_k */
-//     SUNCheckCall(N_VLinearCombination(m, R + m * mMax, Q, qrdata->vtemp2));
-//     N_VLinearSum(ONE, qrdata->vtemp, -ONE, qrdata->vtemp2, qrdata->vtemp2);
-//     SUNCheckLastErr();
+    /* y = df - Q_k-1 s_k */
+    // SUNCheckCall(N_VLinearCombination(m, R + m * mMax, Q, qrdata->vtemp2));
+    N_VLinearCombination_SComplex(m, R + m * mMax, Q, qrdata->vtemp2);
+    N_VLinearSum_SComplex(ONE, qrdata->vtemp, -ONE, qrdata->vtemp2, qrdata->vtemp2);
+    // SUNCheckLastErr();
 
-//     /* z_k = Q_k-1^T y */
-//     SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp2, Q, qrdata->temp_array));
+    /* z_k = Q_k-1^T y */
+    // SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp2, Q, qrdata->temp_array));
+    N_VDotProdMulti_SComplex(m, qrdata->vtemp2, Q, qrdata->temp_array);
 
-//     /* df = y - Q_k-1 z_k */
-//     SUNCheckCall(N_VLinearCombination(m, qrdata->temp_array, Q, Q[m]));
-//     N_VLinearSum(ONE, qrdata->vtemp2, -ONE, Q[m], qrdata->vtemp);
-//     SUNCheckLastErr();
+    /* df = y - Q_k-1 z_k */
+    // SUNCheckCall(N_VLinearCombination(m, qrdata->temp_array, Q, Q[m]));
+    N_VLinearCombination_SComplex(m, qrdata->temp_array, Q, Q[m]);
+    N_VLinearSum_SComplex(ONE, qrdata->vtemp2, -ONE, Q[m], qrdata->vtemp);
+    // SUNCheckLastErr();
 
-//     /* R(1:k-1,k) = s_k + z_k */
-//     for (j = 0; j < m; j++)
-//     {
-//       R[m * mMax + j] = R[m * mMax + j] + qrdata->temp_array[j];
-//     }
-//   }
+    /* R(1:k-1,k) = s_k + z_k */
+    for (j = 0; j < m; j++)
+    {
+      R[m * mMax + j] = R[m * mMax + j] + qrdata->temp_array[j];
+    }
+  }
 
-//   /* R(k,k) = \| df \| */
-//   R[m * mMax + m] = N_VDotProd(qrdata->vtemp, qrdata->vtemp);
-//   SUNCheckLastErr();
-//   R[m * mMax + m] = SUNRsqrt(R[m * mMax + m]);
-//   /* Q(:,k) = df / R(k,k) */
-//   N_VScale((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
-//   SUNCheckLastErr();
+  /* R(k,k) = \| df \| */
+  R[m * mMax + m] = (sunrealtype)N_VDotProd_SComplex(qrdata->vtemp, qrdata->vtemp);
+  // SUNCheckLastErr();
+  R[m * mMax + m] = SUNRsqrt((sunrealtype)R[m * mMax + m]);
+  /* Q(:,k) = df / R(k,k) */
+  N_VScale_SComplex((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
+  // SUNCheckLastErr();
 
-//   return SUN_SUCCESS;
-// }
+  return SUN_SUCCESS;
+}
 
-// /*
-//  * -----------------------------------------------------------------
-//  * Function : SUNQRAdd_DCGS2
-//  * -----------------------------------------------------------------
-//  * Low synchronous Implementation of QRAdd to be called in
-//  * Anderson Acceleration.
-//  * -----------------------------------------------------------------
-//  */
+/*
+ * -----------------------------------------------------------------
+ * Function : SUNQRAdd_DCGS2
+ * -----------------------------------------------------------------
+ * Low synchronous Implementation of QRAdd to be called in
+ * Anderson Acceleration.
+ * -----------------------------------------------------------------
+ */
 
-// SUNErrCode SUNQRAdd_DCGS2(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
-//                           int mMax, void* QRdata)
-// {
-//   SUNFunctionBegin(Q[0]->sunctx);
-//   sunindextype j;
-//   SUNQRData qrdata = (SUNQRData)QRdata;
+SUNErrCode SUNQRAdd_DCGS2Complex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
+                          int mMax, void* QRdata)
+{
+  // SUNFunctionBegin(Q[0]->sunctx);
+  sunindextype j;
+  SUNQRData qrdata = (SUNQRData)QRdata;
 
-//   N_VScale(ONE, df, qrdata->vtemp);
-//   SUNCheckLastErr(); /* temp = df */
+  N_VScale_SComplex(ONE, df, qrdata->vtemp);
+  // SUNCheckLastErr(); /* temp = df */
 
-//   if (m > 0)
-//   {
-//     /* R(1:k-1,k) = Q_k-1^T df_aa */
-//     SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp, Q, R + m * mMax));
-//     /* Delayed reorthogonalization */
-//     if (m > 1)
-//     {
-//       /* s = Q_k-2^T Q(:,k-1) */
-//       SUNCheckCall(N_VDotProdMulti(m - 1, Q[m - 1], Q, qrdata->temp_array));
+  if (m > 0)
+  {
+    /* R(1:k-1,k) = Q_k-1^T df_aa */
+    // SUNCheckCall(N_VDotProdMulti(m, qrdata->vtemp, Q, R + m * mMax));
+    N_VDotProdMulti_SComplex(m, qrdata->vtemp, Q, R + m * mMax);
+    /* Delayed reorthogonalization */
+    if (m > 1)
+    {
+      /* s = Q_k-2^T Q(:,k-1) */
+      // SUNCheckCall(N_VDotProdMulti(m - 1, Q[m - 1], Q, qrdata->temp_array));
+      N_VDotProdMulti_SComplex(m - 1, Q[m - 1], Q, qrdata->temp_array);
 
-//       /* Q(:,k-1) = Q(:,k-1) - Q_k-2 s */
-//       SUNCheckCall(
-//         N_VLinearCombination(m - 1, qrdata->temp_array, Q, qrdata->vtemp2));
-//       N_VLinearSum(ONE, Q[m - 1], -ONE, qrdata->vtemp2, Q[m - 1]);
-//       SUNCheckLastErr();
+      /* Q(:,k-1) = Q(:,k-1) - Q_k-2 s */
+      // SUNCheckCall(
+      //   N_VLinearCombination(m - 1, qrdata->temp_array, Q, qrdata->vtemp2));
+      N_VLinearCombination_SComplex(m - 1, qrdata->temp_array, Q, qrdata->vtemp2);
+      N_VLinearSum_SComplex(ONE, Q[m - 1], -ONE, qrdata->vtemp2, Q[m - 1]);
+      // SUNCheckLastErr();
 
-//       /* R(1:k-2,k-1) = R(1:k-2,k-1) + s */
-//       for (j = 0; j < m - 1; j++)
-//       {
-//         R[(m - 1) * mMax + j] = R[(m - 1) * mMax + j] + qrdata->temp_array[j];
-//       }
-//     }
+      /* R(1:k-2,k-1) = R(1:k-2,k-1) + s */
+      for (j = 0; j < m - 1; j++)
+      {
+        R[(m - 1) * mMax + j] = R[(m - 1) * mMax + j] + qrdata->temp_array[j];
+      }
+    }
 
-//     /* df = df - Q(:,k-1) R(1:k-1,k) */
-//     SUNCheckCall(N_VLinearCombination(m, R + m * mMax, Q, qrdata->vtemp2));
-//     N_VLinearSum(ONE, qrdata->vtemp, -ONE, qrdata->vtemp2, qrdata->vtemp);
-//     SUNCheckLastErr();
-//   }
+    /* df = df - Q(:,k-1) R(1:k-1,k) */
+    // SUNCheckCall(N_VLinearCombination(m, R + m * mMax, Q, qrdata->vtemp2));
+    N_VLinearCombination_SComplex(m, R + m * mMax, Q, qrdata->vtemp2);
+    N_VLinearSum_SComplex(ONE, qrdata->vtemp, -ONE, qrdata->vtemp2, qrdata->vtemp);
+    // SUNCheckLastErr();
+  }
 
-//   /* R(k,k) = \| df \| */
-//   R[m * mMax + m] = N_VDotProd(qrdata->vtemp, qrdata->vtemp);
-//   SUNCheckLastErr();
-//   R[m * mMax + m] = SUNRsqrt(R[m * mMax + m]);
-//   /* Q(:,k) = df / R(k,k) */
-//   N_VScale((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
-//   SUNCheckLastErr();
+  /* R(k,k) = \| df \| */
+  R[m * mMax + m] = (sunrealtype)N_VDotProd_SComplex(qrdata->vtemp, qrdata->vtemp);
+  // SUNCheckLastErr();
+  R[m * mMax + m] = SUNRsqrt((sunrealtype)R[m * mMax + m]);
+  /* Q(:,k) = df / R(k,k) */
+  N_VScale_SComplex((1 / R[m * mMax + m]), qrdata->vtemp, Q[m]);
+  // SUNCheckLastErr();
 
-//   return SUN_SUCCESS;
-// }
+  return SUN_SUCCESS;
+}
 
 // /*
 //  * -----------------------------------------------------------------

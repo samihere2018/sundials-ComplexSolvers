@@ -337,7 +337,7 @@ int SUNQRsolComplex(int n, suncomplextype** h, suncomplextype* q, suncomplextype
  */
 
 SUNDIALS_EXPORT
-SUNErrCode SUNQRAdd_MGS(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
+SUNErrCode SUNQRAdd_MGSComplex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
                         int mMax, void* QRdata);
 
 /*
@@ -375,7 +375,7 @@ SUNErrCode SUNQRAdd_MGS(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
  */
 
 SUNDIALS_EXPORT
-SUNErrCode SUNQRAdd_ICWY(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
+SUNErrCode SUNQRAdd_ICWYComplex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
                          int mMax, void* QRdata);
 
 /*
@@ -388,7 +388,7 @@ SUNErrCode SUNQRAdd_ICWY(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
  */
 
 SUNDIALS_EXPORT
-SUNErrCode SUNQRAdd_ICWY_SB(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
+SUNErrCode SUNQRAdd_ICWY_SBComplex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
                             int mMax, void* QRdata);
 
 /*
@@ -423,7 +423,7 @@ SUNErrCode SUNQRAdd_ICWY_SB(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
  */
 
 SUNDIALS_EXPORT
-SUNErrCode SUNQRAdd_CGS2(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
+SUNErrCode SUNQRAdd_CGS2Complex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
                          int mMax, void* QRdata);
 
 /*
@@ -460,7 +460,7 @@ SUNErrCode SUNQRAdd_CGS2(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
  */
 
 SUNDIALS_EXPORT
-SUNErrCode SUNQRAdd_DCGS2(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
+SUNErrCode SUNQRAdd_DCGS2Complex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
                           int mMax, void* QRdata);
 
 /*
@@ -473,7 +473,7 @@ SUNErrCode SUNQRAdd_DCGS2(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
  */
 
 SUNDIALS_EXPORT
-SUNErrCode SUNQRAdd_DCGS2_SB(N_Vector* Q, sunrealtype* R, N_Vector df, int m,
+SUNErrCode SUNQRAdd_DCGS2_SBComplex(N_Vector* Q, suncomplextype* R, N_Vector df, int m,
                              int mMax, void* QRdata);
 
 #ifdef __cplusplus
