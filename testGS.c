@@ -31,8 +31,8 @@
 #include <stdlib.h>
 #include "nvector_serialcomplex.h"
 #include "sundials_iterativecomplex.h"
-// #include "sundials_iterativecomplex.h" 
-// #include "sundials_iterativecomplex_impl.h" 
+// #include "sundials_iterativecomplex.h" //Amihere
+// #include "sundials_iterativecomplex_impl.h" //Amihere
 
 
 #if defined(SUNDIALS_EXTENDED_PRECISION)
@@ -91,17 +91,17 @@ int main(int argc, char* argv[])
   //   }
   // }
 
-  H = (suncomplextype**)malloc((3) * sizeof(suncomplextype*)); 
+  H = (suncomplextype**)malloc((3) * sizeof(suncomplextype*)); //Amihere
   for (k = 0; k < 3; k++)
   {
     H[k] = NULL;
-    H[k] = (suncomplextype*)malloc(3 * sizeof(suncomplextype)); 
+    H[k] = (suncomplextype*)malloc(3 * sizeof(suncomplextype)); //Amihere
   }
 
   givens = (suncomplextype*)malloc(2 * 3 * sizeof(suncomplextype));
 
-  vtemp = (N_Vector*)malloc((3) * sizeof(N_Vector)); 
-  stemp = (suncomplextype*)malloc((3) * sizeof(suncomplextype)); 
+  vtemp = (N_Vector*)malloc((3) * sizeof(N_Vector)); //Amihere
+  stemp = (suncomplextype*)malloc((3) * sizeof(suncomplextype)); //Amihere
 
   /* set up matrix */
   vdata = N_VGetArrayPointer_SComplex(V[0]);
@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
   for (k=0; k<3; k++)
   {
     krydim = k  ;
-    SUNClassicalGSComplex(V, H, k, 3, &vnorm, stemp, vtemp);
-    // SUNModifiedGSComplex(V, H, k, 3, &vnorm); //Uncomment if Modified GS is used.
+    // SUNClassicalGSComplex(V, H, k, 3, &vnorm, stemp, vtemp);
+    SUNModifiedGSComplex(V, H, k, 3, &vnorm); //Uncomment if Modified GS is used.
     N_VScale_SComplex(1.0/vnorm, V[k], V[k]);
     // SUNQRfactComplex(krydim, H, givens, k); //Uncomment to check Hessenberg matrix using QR factorization (uses Givens Rotation)
     // printf("stemp at %d is: %f + i%f\n", k, creal(stemp[k]), cimag(stemp[k]));
@@ -140,11 +140,11 @@ int main(int argc, char* argv[])
   }
   
   /* print everything in V */
-  for (k=0; k<3; k++)
-  {
-    printf("V[%i] = \n",k);
-    N_VPrint(V[k]);
-  }
+  // for (k=0; k<3; k++)
+  // {
+  //   printf("V[%i] = \n",k);
+  //   N_VPrint(V[k]);
+  // }
 
 
   // /* print everything in H */
